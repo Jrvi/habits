@@ -84,8 +84,10 @@ func (s *HabitStore) GetUserFeed(ctx context.Context, userID int64, fq Paginated
 	query := `
 		SELECT h.id,
   		h.name,
-     	h.description,
-		  h.created_at
+      h.user_id,
+     	h.impact,
+		  h.created_at,
+      h.version
 		FROM habits h
 		WHERE h.user_id = $1
 		LIMIT $2 OFFSET $3;
@@ -106,8 +108,8 @@ func (s *HabitStore) GetUserFeed(ctx context.Context, userID int64, fq Paginated
 		var h Habit
 		if err := rows.Scan(
 			&h.ID,
-			&h.UserID,
 			&h.Name,
+			&h.UserID,
 			&h.Impact,
 			&h.Created_at,
 			&h.Version,

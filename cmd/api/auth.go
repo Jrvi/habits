@@ -7,7 +7,9 @@ import (
 	"juhojarvi/habits/internal/mailer"
 	"juhojarvi/habits/internal/store"
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -100,4 +102,52 @@ func (api *api) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		api.internalServerError(w, r, err)
 	}
 
+}
+
+type CreateUserTokenPayload struct {
+	Email    string `json:"email" validate:"required,email,max=255"`
+	Password string `json:"password" validate:"required,min=3,max=72"`
+}
+
+func (api *api) createTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var payload CreateUserTokenPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		api.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		api.badRequestResponse(w, r, err)
+		return
+	}
+
+	user, err := api.store.Users.GetByEmail(r.Context(), payload.Email)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			api.unauthorizedErrorResponse(w, r, err)
+		default:
+			api.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	claims := jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(api.config.auth.token.exp).Unix(),
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"iss": api.config.auth.token.iss,
+		"aud": api.config.auth.token.iss,
+	}
+
+	token, err := api.authenticator.GenerateToken(claims)
+	if err != nil {
+		api.internalServerError(w, r, err)
+		return
+	}
+
+	if err := api.jsonResponse(w, http.StatusCreated, token); err != nil {
+		api.internalServerError(w, r, err)
+	}
 }

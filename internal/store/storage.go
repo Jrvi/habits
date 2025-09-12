@@ -27,6 +27,7 @@ type Storage struct {
 		CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error
 		Activate(ctx context.Context, token string) error
 		Delete(ctx context.Context, userID int64) error
+    GetByEmail(ctx context.Context, email string) (*User, error)
 	}
 }
 

@@ -18,7 +18,7 @@ func (api *api) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := api.jsonResponse(w, http.StatusOK, user); err != nil {
 		api.internalServerError(w, r, err)
-		return
+  return
 	}
 }
 

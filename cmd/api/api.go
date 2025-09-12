@@ -1,6 +1,7 @@
 package main
 
 import (
+	"juhojarvi/habits/internal/auth"
 	"juhojarvi/habits/internal/mailer"
 	"juhojarvi/habits/internal/store"
 	"net/http"
@@ -12,10 +13,11 @@ import (
 )
 
 type api struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -25,15 +27,31 @@ type config struct {
 	frontendURL string
 	apiURL      string
 	mail        mailConfig
+	auth        authConfig
+}
+
+type authConfig struct {
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secret string
+	exp    time.Duration
+	iss    string
 }
 
 type mailConfig struct {
 	sendGrid  sendGridConfig
+	mailTrap  mailTrapConfig
 	fromEmail string
 	exp       time.Duration
 }
 
 type sendGridConfig struct {
+	apiKey string
+}
+
+type mailTrapConfig struct {
 	apiKey string
 }
 
@@ -60,6 +78,7 @@ func (api *api) mount() http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 
 		r.Route("/habits", func(r chi.Router) {
+			r.Use(api.AuthTokenMiddleware)
 			r.Post("/", api.createHabitHandler)
 
 			r.Route("/{habitID}", func(r chi.Router) {
@@ -77,13 +96,15 @@ func (api *api) mount() http.Handler {
 			})
 
 			r.Group(func(r chi.Router) {
-				r.Get("/feed", api.getFeedHandler)
+				r.Use(api.AuthTokenMiddleware)
+				r.Get("/feed", api.getUserFeedHandler)
 			})
 		})
 
 		// Public routes
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", api.registerUserHandler)
+			r.Post("/token", api.createTokenHandler)
 		})
 	})
 

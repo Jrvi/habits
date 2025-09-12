@@ -1,6 +1,7 @@
 package main
 
 import (
+	"juhojarvi/habits/internal/auth"
 	"juhojarvi/habits/internal/db"
 	"juhojarvi/habits/internal/env"
 	"juhojarvi/habits/internal/mailer"
@@ -36,7 +37,17 @@ func main() {
 			sendGrid: sendGridConfig{
 				apiKey: env.GetString("SENDGRID_API_KEY", ""),
 			},
+      mailTrap: mailTrapConfig{
+        apiKey: env.GetString("MAILTRAP_API_KEY", ""),
+      },
 		},
+    auth: authConfig{
+      token: tokenConfig{
+        secret: env.GetString("AUTH_TOKEN_SECRET", ""),
+        exp: time.Hour * 24 * 3,
+        iss: "habits",
+      },
+    },
   }
 
   // Logger
@@ -49,10 +60,21 @@ func main() {
     logger.Fatal(err)
   }
 
+  // Authenticator
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+		cfg.auth.token.secret,
+		cfg.auth.token.iss,
+		cfg.auth.token.iss,
+	)
+
 	defer db.Close()
 	logger.Info("Connected to database")
 
-	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+	//mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+  mailtrap, err := mailer.NewMailTrapClient(cfg.mail.mailTrap.apiKey, cfg.mail.fromEmail)
+	if err != nil {
+		logger.Fatal(err)
+	}
 
   store := store.NewStorage(db)
 
@@ -60,7 +82,8 @@ func main() {
     config: cfg,
     store: store,
     logger: logger,
-		mailer: mailer,
+		mailer: mailtrap,
+    authenticator: jwtAuthenticator,
   }
 
   mux := api.mount()
