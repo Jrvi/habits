@@ -1,6 +1,7 @@
 package main
 
 import (
+	"juhojarvi/habits/internal/mailer"
 	"juhojarvi/habits/internal/store"
 	"net/http"
 	"time"
@@ -14,6 +15,7 @@ type api struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type config struct {
@@ -22,6 +24,17 @@ type config struct {
 	env         string
 	frontendURL string
 	apiURL      string
+	mail        mailConfig
+}
+
+type mailConfig struct {
+	sendGrid  sendGridConfig
+	fromEmail string
+	exp       time.Duration
+}
+
+type sendGridConfig struct {
+	apiKey string
 }
 
 type dbConfig struct {
@@ -55,6 +68,23 @@ func (api *api) mount() http.Handler {
 			})
 		})
 
+		r.Route("/users", func(r chi.Router) {
+			r.Put("/activate/{token}", api.activateUserHandler)
+
+			r.Route("/{userID}", func(r chi.Router) {
+				r.Use(api.userContextMiddleware)
+				r.Get("/", api.getUserHandler)
+			})
+
+			r.Group(func(r chi.Router) {
+				r.Get("/feed", api.getFeedHandler)
+			})
+		})
+
+		// Public routes
+		r.Route("/authentication", func(r chi.Router) {
+			r.Post("/user", api.registerUserHandler)
+		})
 	})
 
 	return r

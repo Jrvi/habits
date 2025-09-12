@@ -1,0 +1,2 @@
+ALTER TABLE habits
+  ADD COLUMN version INT DEFAULT 0;

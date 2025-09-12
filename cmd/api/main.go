@@ -3,12 +3,14 @@ package main
 import (
 	"juhojarvi/habits/internal/db"
 	"juhojarvi/habits/internal/env"
+	"juhojarvi/habits/internal/mailer"
 	"juhojarvi/habits/internal/store"
 	"log"
+	"time"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"go.uber.org/zap"
-  _ "github.com/lib/pq"
 )
 
 func main() {
@@ -28,6 +30,13 @@ func main() {
       maxIdleTime: env.GetString("DB_MAX_IDLE_TIME", "15m"),
     },
     env: env.GetString("ENV", "development"),
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3,
+			fromEmail: env.GetString("FROM_EMAIL", ""),
+			sendGrid: sendGridConfig{
+				apiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
+		},
   }
 
   // Logger
@@ -40,12 +49,18 @@ func main() {
     logger.Fatal(err)
   }
 
+	defer db.Close()
+	logger.Info("Connected to database")
+
+	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+
   store := store.NewStorage(db)
 
   api := &api{
     config: cfg,
     store: store,
     logger: logger,
+		mailer: mailer,
   }
 
   mux := api.mount()
