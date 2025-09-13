@@ -1,0 +1,26 @@
+# Build stage
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# build args (tulevat fly.toml:sta)
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+# Kopioidaan vain package.json ja lock-tiedosto
+COPY package*.json ./
+
+RUN npm install
+
+# Kopioidaan muu lähdekoodi (ilman node_modules)
+COPY . .
+
+# Buildaa Vite-appin käyttäen annettua VITE_API_URL:ia
+RUN npm run build
+
+# Serve stage
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

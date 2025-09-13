@@ -121,8 +121,6 @@ func (s *HabitStore) GetUserFeed(ctx context.Context, userID int64, fq Paginated
 	}
 
 	return feed, nil
-
-	return nil, nil
 }
 
 func (s *HabitStore) Delete(ctx context.Context, postID int64) error {

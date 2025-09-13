@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function App() {
   const [user, setUser] = useState(null)
   const [username, setUsername] = useState('')
@@ -18,7 +20,7 @@ function App() {
     e.preventDefault()
     setError('')
     try {
-      const response = await axios.post('http://localhost:8081/v1/authentication/token', {
+      const response = await axios.post(`${API_URL}/v1/authentication/token`, {
         email: username,
         password,
       })
@@ -76,19 +78,18 @@ function Feed({ token }) {
   const [name, setName] = useState('')
   const [impact, setImpact] = useState('')
 
-  useEffect(() => {
-    const fetchFeed = async () => {
-      try {
-        const response = await axios.get('http://localhost:8081/v1/users/feed', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        setPosts(Array.isArray(response.data.data) ? response.data.data : [])
-      } catch (err) {
-        setError('Feedin haku epäonnistui')
-      }
+  const fetchFeed = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/v1/users/feed`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setPosts(Array.isArray(response.data.data) ? response.data.data : [])
+    } catch (err) {
+      setError('Feedin haku epäonnistui')
     }
+  }
+
+  useEffect(() => {
     fetchFeed()
   }, [token])
 
@@ -97,23 +98,13 @@ function Feed({ token }) {
     setError('')
     try {
       await axios.post(
-        'http://localhost:8081/v1/habits',
+        `${API_URL}/v1/habits`,
         { name, impact },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       setName('')
       setImpact('')
-      // Päivitä feedi postauksen jälkeen
-      const response = await axios.get('http://localhost:8081/v1/users/feed', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      setPosts(Array.isArray(response.data.data) ? response.data.data : [])
+      await fetchFeed()
     } catch (err) {
       setError('Habbin lisääminen epäonnistui')
     }
@@ -125,7 +116,7 @@ function Feed({ token }) {
       <form onSubmit={handlePost}>
         <input
           type="text"
-          placeholder="Habbin nimi"
+          placeholder="Habitin nimi"
           value={name}
           onChange={e => setName(e.target.value)}
         />
