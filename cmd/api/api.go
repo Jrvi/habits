@@ -94,6 +94,8 @@ func (api *api) mount() http.Handler {
 			r.Route("/{habitID}", func(r chi.Router) {
 				r.Use(api.habitContextMiddleware)
 				r.Get("/", api.getHabitHandler)
+        r.Delete("/", api.deleteHabitHandler)
+        r.Patch("/", api.updateHabitHandler)
 			})
 		})
 
