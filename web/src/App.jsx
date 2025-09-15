@@ -1,13 +1,58 @@
 import { useState, useEffect } from 'react'
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useParams,
+  Link,
+} from 'react-router-dom'
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL
 
-function App() {
+// 🔹 Aktivointisivu
+function ActivatePage() {
+  const { token } = useParams()
+  const [status, setStatus] = useState('Aktivoidaan...')
+
+  useEffect(() => {
+    if (token) {
+      axios
+        .put(`${API_URL}/v1/users/activate/` + token )
+        .then(() => setStatus('Tili aktivoitu onnistuneesti!'))
+        .catch(() =>
+          setStatus('Aktivointi epäonnistui. Linkki voi olla vanhentunut.')
+        )
+    } else {
+      setStatus('Aktivointitunnusta ei löytynyt.')
+    }
+  }, [token])
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded-2xl shadow-md w-96 text-center">
+        <h2 className="text-xl font-bold mb-4">Aktivointi</h2>
+        <p>{status}</p>
+        <div className="mt-4">
+          <Link to="/" className="text-blue-600 hover:underline">
+            {status.includes('onnistuneesti')
+              ? 'Siirry kirjautumaan'
+              : 'Palaa etusivulle'}
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 🔹 Login / Rekisteröinti + Feed
+function AuthWrapper() {
   const [user, setUser] = useState(null)
+  const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isRegister, setIsRegister] = useState(false)
 
   useEffect(() => {
     const savedUser = localStorage.getItem('habitsUser')
@@ -16,21 +61,39 @@ function App() {
     }
   }, [])
 
-  const handleLogin = async (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault()
     setError('')
     try {
+      if (isRegister) {
+        // Rekisteröinti
+        await axios.post(`${API_URL}/v1/authentication/user`, {
+          email,
+          username,
+          password,
+        })
+        // Tässä EI kirjata sisään suoraan, koska tili pitää aktivoida sähköpostista
+        setIsRegister(false)
+        setError('Rekisteröinti onnistui! Tarkista sähköpostisi aktivointilinkki.')
+        return
+      }
+      // Kirjautuminen
       const response = await axios.post(`${API_URL}/v1/authentication/token`, {
-        email: username,
+        email,
         password,
       })
-      const userData = { email: username, token: response.data.data }
+      const userData = { email, token: response.data.data }
       setUser(userData)
       localStorage.setItem('habitsUser', JSON.stringify(userData))
+      setEmail('')
       setUsername('')
       setPassword('')
     } catch (err) {
-      setError('Väärä käyttäjätunnus tai salasana')
+      setError(
+        isRegister
+          ? 'Rekisteröinti epäonnistui'
+          : 'Väärä sähköposti tai salasana'
+      )
     }
   }
 
@@ -41,42 +104,83 @@ function App() {
 
   if (!user) {
     return (
-      <div>
-        <h2>Kirjaudu sisään</h2>
-        <form onSubmit={handleLogin}>
-          <input
-            type="text"
-            placeholder="Käyttäjänimi"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Salasana"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
-          <button type="submit">Kirjaudu</button>
-        </form>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="bg-white p-8 rounded-2xl shadow-md w-96">
+          <h2 className="text-xl font-bold mb-4 text-center">
+            {isRegister ? 'Rekisteröidy' : 'Kirjaudu sisään'}
+          </h2>
+          <form onSubmit={handleAuth} className="flex flex-col gap-3">
+            <input
+              type="email"
+              placeholder="Sähköposti"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="p-2 border rounded-md"
+              required
+            />
+            {isRegister && (
+              <input
+                type="text"
+                placeholder="Käyttäjätunnus"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="p-2 border rounded-md"
+                required
+              />
+            )}
+            <input
+              type="password"
+              placeholder="Salasana"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="p-2 border rounded-md"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
+            >
+              {isRegister ? 'Rekisteröidy' : 'Kirjaudu'}
+            </button>
+          </form>
+          {error && <p className="text-red-500 mt-3 text-center">{error}</p>}
+          <p className="mt-4 text-sm text-center">
+            {isRegister ? 'Onko sinulla jo tili?' : 'Eikö sinulla ole vielä tiliä?'}{' '}
+            <button
+              onClick={() => setIsRegister(!isRegister)}
+              className="text-blue-600 hover:underline"
+            >
+              {isRegister ? 'Kirjaudu sisään' : 'Rekisteröidy'}
+            </button>
+          </p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div>
-      <h2>Tervetuloa, {user.email}!</h2>
-      <button onClick={handleLogout}>Kirjaudu ulos</button>
+    <div className="p-6 max-w-2xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Tervetuloa, {user.email}!</h2>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+        >
+          Kirjaudu ulos
+        </button>
+      </div>
       <Feed token={user.token} />
     </div>
   )
 }
 
+// 🔹 Feed (habittien hallinta)
 function Feed({ token }) {
   const [posts, setPosts] = useState([])
   const [error, setError] = useState('')
   const [name, setName] = useState('')
-  const [impact, setImpact] = useState('')
+  const [impact, setImpact] = useState('neutral')
+  const [editing, setEditing] = useState(null)
 
   const fetchFeed = async () => {
     try {
@@ -97,45 +201,115 @@ function Feed({ token }) {
     e.preventDefault()
     setError('')
     try {
-      await axios.post(
-        `${API_URL}/v1/habits`,
-        { name, impact },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      if (editing) {
+        await axios.patch(
+          `${API_URL}/v1/habits/${editing}`,
+          { name, impact },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        setEditing(null)
+      } else {
+        await axios.post(
+          `${API_URL}/v1/habits`,
+          { name, impact },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      }
       setName('')
-      setImpact('')
+      setImpact('neutral')
       await fetchFeed()
     } catch (err) {
-      setError('Habbin lisääminen epäonnistui')
+      setError('Toiminto epäonnistui')
+    }
+  }
+
+  const handleEdit = (habit) => {
+    setName(habit.name)
+    setImpact(habit.impact)
+    setEditing(habit.id)
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/v1/habits/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      await fetchFeed()
+    } catch (err) {
+      setError('Poistaminen epäonnistui')
     }
   }
 
   return (
     <div>
-      <h3>Feed</h3>
-      <form onSubmit={handlePost}>
+      <h3 className="text-xl font-semibold mb-4">Habitit</h3>
+      <form onSubmit={handlePost} className="flex gap-2 mb-6">
         <input
           type="text"
           placeholder="Habitin nimi"
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={(e) => setName(e.target.value)}
+          className="flex-1 p-2 border rounded-md"
         />
-        <input
-          type="text"
-          placeholder="Vaikutus"
+        <select
           value={impact}
-          onChange={e => setImpact(e.target.value)}
-        />
-        <button type="submit">Lisää habit</button>
+          onChange={(e) => setImpact(e.target.value)}
+          className="flex-1 p-2 border rounded-md"
+        >
+          <option value="negative">Negative</option>
+          <option value="neutral">Neutral</option>
+          <option value="positive">Positive</option>
+        </select>
+        <button
+          type="submit"
+          className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+        >
+          {editing ? 'Päivitä' : 'Lisää'}
+        </button>
       </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <ul>
-        {posts.map(post => (
-          <li key={post.id}>{post.name} {post.impact}</li>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <div className="grid gap-4">
+        {posts.map((post) => (
+          <div
+            key={post.id}
+            className="p-4 bg-white shadow rounded-lg flex justify-between items-center"
+          >
+            <div>
+              <p className="font-medium">{post.name}</p>
+              <p className="text-sm text-gray-600">Impact: {post.impact}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEdit(post)}
+                className="bg-yellow-400 text-white px-3 py-1 rounded-md hover:bg-yellow-500"
+              >
+                Muokkaa
+              </button>
+              <button
+                onClick={() => handleDelete(post.id)}
+                className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
+              >
+                Poista
+              </button>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   )
 }
 
+// 🔹 Router App
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<AuthWrapper />} />
+        <Route path="/confirm/:token" element={<ActivatePage />} />
+      </Routes>
+    </Router>
+  )
+}
+
 export default App
+

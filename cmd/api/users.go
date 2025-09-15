@@ -36,9 +36,7 @@ func (api *api) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := api.jsonResponse(w, http.StatusNoContent, nil); err != nil {
-		api.internalServerError(w, r, err)
-	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (api *api) userContextMiddleware(next http.Handler) http.Handler {

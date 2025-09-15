@@ -113,8 +113,8 @@ func (api *api) deleteHabitHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdateHabitPayload struct {
-	Name   *string `json:"name" validate:"omitempty,max=50`
-	Impact *string `json:"impact" validate:"omitempty,max=25`
+	Name   *string `json:"name" validate:"omitempty,max=50"`
+	Impact *string `json:"impact" validate:"omitempty,max=25"`
 }
 
 func (api *api) updateHabitHandler(w http.ResponseWriter, r *http.Request) {
@@ -122,6 +122,11 @@ func (api *api) updateHabitHandler(w http.ResponseWriter, r *http.Request) {
 
 	var payload UpdateHabitPayload
 	if err := readJSON(w, r, &payload); err != nil {
+		api.badRequestError(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
 		api.badRequestError(w, r, err)
 		return
 	}
@@ -134,15 +139,21 @@ func (api *api) updateHabitHandler(w http.ResponseWriter, r *http.Request) {
 		habit.Impact = *payload.Impact
 	}
 
-  if err := Validate.Struct(payload); err != nil {
-    api.badRequestError(w, r, err)
-    return
-  }
+	api.logger.Info("Updating habit", "id", habit.ID, "version", habit.Version, "impact", habit.Impact)
 
-  if err := api.jsonResponse(w, http.StatusOK, habit); err != nil {
-    api.internalServerError(w, r, err)
-    return
-  }
+	if err := api.store.Habits.Update(r.Context(), habit); err != nil {
+		switch err {
+		case store.ErrNotFound:
+			api.notFoundResponseError(w, r, err)
+		default:
+			api.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := api.jsonResponse(w, http.StatusOK, habit); err != nil {
+		api.internalServerError(w, r, err)
+	}
 }
 
 func getHabitFromCtx(r *http.Request) *store.Habit {

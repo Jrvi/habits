@@ -50,7 +50,7 @@ func (s *HabitStore) Create(ctx context.Context, habit *Habit) error {
 
 func (s *HabitStore) GetByID(ctx context.Context, id int64) (*Habit, error) {
 	query := `
-    SELECT id, name, impact, created_at, updated_at
+    SELECT id, name, impact, created_at, updated_at, version
     FROM habits
     WHERE id = $1
   `
@@ -66,6 +66,7 @@ func (s *HabitStore) GetByID(ctx context.Context, id int64) (*Habit, error) {
 		&habit.Impact,
 		&habit.Created_at,
 		&habit.Updated_at,
+		&habit.Version,
 	)
 
 	if err != nil {
@@ -149,7 +150,7 @@ func (s *HabitStore) Delete(ctx context.Context, postID int64) error {
 func (s *HabitStore) Update(ctx context.Context, habit *Habit) error {
 	query := `
 		UPDATE habits
-		SET name = &1, impact = &2, version = version + 1
+		SET name = $1, impact = $2, version = version + 1
 		WHERE id = $3 AND version = $4
 		RETURNING version
 	`
