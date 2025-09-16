@@ -19,7 +19,7 @@ function ActivatePage() {
   useEffect(() => {
     if (token) {
       axios
-        .post(`${API_URL}/v1/users/activate/` + token )
+        .put(`${API_URL}/v1/users/activate/` + token )
         .then(() => setStatus("Tili aktivoitu onnistuneesti!"))
         .catch(() =>
           setStatus("Aktivointi epäonnistui. Linkki voi olla vanhentunut.")
