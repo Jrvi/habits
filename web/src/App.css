@@ -1,0 +1,27 @@
+:root {
+  /* Pääpainike: vihertävän sininen */
+  --bs-primary: #3bb4a6;
+
+  /* Positiiviset toiminnot */
+  --bs-success: #22c55e;
+
+  /* Varoitus (muokkaus) */
+  --bs-warning: #eab308;
+
+  /* Negatiiviset (poisto) */
+  --bs-danger: #e5534b;
+
+  /* Sekundääriset (peruuta, neutraali) */
+  --bs-secondary: #94a3b8;
+
+  /* Info (korostus esim. linkeille) */
+  --bs-info: #06b6d4;
+
+  /* Taustat & teksti */
+  --bs-body-bg: #f0fdf4;   /* hyvin vaalea vihertävä tausta */
+  --bs-body-color: #1e293b;
+}
+
+.bg-gradient {
+  background: linear-gradient(135deg, #d1fae5, #bfdbfe);
+}
