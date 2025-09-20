@@ -1,22 +1,22 @@
 :root {
   /* Backgrounds */
-  --bg-page: #0F172A;      /* syvä tummansininen */
-  --bg-card: #1E293B;      /* kortit */
-  --bg-form: #273449;      /* lomakkeet */
-  --border: #334155;       /* hillitty borderi */
+  --bg-page: #0F172A;
+  --bg-card: #1E293B;
+  --bg-form: #273449;
+  --border: #334155;
 
   /* Text */
-  --text-primary: #F1F5F9; /* vaalea harmaa */
-  --text-secondary: #94A3B8; 
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
 
   /* Actions */
-  --accent: #06B6D4;       /* turkoosi */
+  --accent: #06B6D4;
   --accent-dark: #0891B2;
-  --positive: #84CC16;     /* limevihreä */
+  --positive: #84CC16;
   --positive-dark: #65A30D;
-  --edit: #F97316;         /* oranssi */
+  --edit: #F97316;
   --edit-dark: #EA580C;
-  --negative: #F43F5E;     /* pinkki-punainen */
+  --negative: #F43F5E;
   --negative-dark: #E11D48;
 
   /* Notifications */
@@ -57,7 +57,7 @@ body {
   margin-bottom: 20px;
 }
 
-/* ----- AUTH FORMS (Login & Register) ----- */
+/* ----- AUTH FORMS ----- */
 .auth-form {
   max-width: 400px;
   margin: 40px auto;
@@ -183,24 +183,28 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap; /* pidetään rivillä desktopilla */
 }
 
+/* nimi + impact-tag */
 .habit-info {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 0; /* flex child voi kutistua */
+  flex: 1;
+  min-width: 0;
 }
 
-.habit-header h2 {
+.habit-info h2 {
   margin: 0;
   font-size: 1.25em;
   color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
-  display: block;
 }
 
 .habit-tag {
@@ -209,6 +213,7 @@ body {
   border-radius: 9999px;
   text-transform: capitalize;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .habit-tag.positive {
@@ -229,6 +234,7 @@ body {
 .habit-buttons {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .habit-buttons button {
@@ -244,6 +250,15 @@ body {
   transform: scale(1.05);
 }
 
+.habit-buttons .edit-btn {
+  background-color: var(--edit);
+  color: white;
+}
+
+.habit-buttons .edit-btn:hover {
+  background-color: var(--edit-dark);
+}
+
 .habit-buttons .delete-btn {
   background-color: var(--negative);
   color: white;
@@ -251,6 +266,10 @@ body {
 
 .habit-buttons .delete-btn:hover {
   background-color: var(--negative-dark);
+}
+
+.habit-buttons.editing .delete-btn {
+  display: none;
 }
 
 /* ----- HABIT FORM ----- */
@@ -376,7 +395,6 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
-  display: block;
 }
 
 .user-greeting .username {
@@ -386,7 +404,6 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
-  display: inline-block;
 }
 
 .user-greeting p {
@@ -429,7 +446,6 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
-  display: block;
 }
 
 /* ----- MOBILE STYLES ----- */
@@ -463,10 +479,27 @@ body {
   .habit-card {
     padding: 14px;
     margin: 10px 0;
+    box-shadow: none;
   }
 
-  .habit-header h2 {
-    font-size: 1.1em;
+  .habit-header {
+    flex-wrap: wrap; /* mobiilissa rivinvaihto sallitaan */
+  }
+
+  .habit-info h2 {
+    font-size: 1.2em;
+    font-weight: 700;
+  }
+
+  .habit-tag {
+    font-size: 0.9em;
+    padding: 5px 12px;
+  }
+
+  .habit-buttons button {
+    font-size: 0.8em;
+    padding: 6px 10px;
+    border-radius: 6px;
   }
 
   .user-info-card {
@@ -478,5 +511,36 @@ body {
   .logout-btn {
     align-self: stretch;
     justify-content: center;
+  }
+
+  /* ---- Habit form mobiilissa ---- */
+  .habit-form {
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: none;
+    margin-top: 16px;
+  }
+
+  .habit-form input,
+  .habit-form select {
+    font-size: 16px;
+    padding: 12px;
+    margin: 8px 0;
+  }
+
+  .habit-form button {
+    width: 100%;
+    padding: 14px;
+    font-size: 1em;
+    margin-top: 12px;
+  }
+
+  .form-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-buttons button {
+    width: 100%;
   }
 }

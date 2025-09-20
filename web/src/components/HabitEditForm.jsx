@@ -1,54 +1,38 @@
-const HabitEditForm = ({ id, name, impact, handleEdit, onCancel }) => {
+import { useState } from "react";
 
-    const handleSubmit = (event) => {
-        event.preventDefault()
-        const updatedHabit = {
-            name: event.target.name.value,
-            impact: event.target.impact.value
-        };
-        handleEdit(id, updatedHabit)
+const HabitEditForm = ({ id, name, impact, onSave, onCancel }) => {
+  const [newName, setNewName] = useState(name);
+  const [newImpact, setNewImpact] = useState(impact);
 
-        if (onCancel) {
-            onCancel()
-        }
-    }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({ name: newName, impact: newImpact });
+  };
 
-    return (
-    <div className="habit-edit-form">
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            Name:
-            <input
-              type="text"
-              name="name"
-              defaultValue={name}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Impact:
-            <select
-              name="impact"
-              defaultValue={impact}
-              required
-            >
-              <option value="positive">positive</option>
-              <option value="neutral">neutral</option>
-              <option value="negative">negative</option>
-            </select>
-          </label>
-        </div>
+  return (
+    <form className="habit-edit-form" onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={newName}
+        onChange={(e) => setNewName(e.target.value)}
+      />
+      <select
+        value={newImpact}
+        onChange={(e) => setNewImpact(e.target.value)}
+      >
+        <option value="positive">Positive</option>
+        <option value="neutral">Neutral</option>
+        <option value="negative">Negative</option>
+      </select>
 
-        <div className="form-buttons">
-          <button type="submit">Save</button>
-          <button type="button" onClick={onCancel}>Cancel</button>
-        </div>
-      </form>
-    </div>
-  )
-}
+      <div className="form-buttons">
+        <button type="submit">Save</button>
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+};
 
-export default HabitEditForm
+export default HabitEditForm;

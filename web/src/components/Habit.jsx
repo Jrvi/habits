@@ -1,11 +1,11 @@
-import Togglable from "./Togglable";
+import { useState } from "react";
 import HabitEditForm from "./HabitEditForm";
 
 const Habit = ({ id, name, impact, handleDelete, handleEdit }) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   const handleDeleteClick = () => {
-    if (handleDelete) {
-      handleDelete(id);
-    }
+    handleDelete?.(id);
   };
 
   return (
@@ -17,22 +17,31 @@ const Habit = ({ id, name, impact, handleDelete, handleEdit }) => {
         </div>
 
         <div className="habit-buttons">
-          <Togglable buttonLabel="Edit">
-            {(onCancel) => (
-              <HabitEditForm
-                id={id}
-                name={name}
-                impact={impact}
-                handleEdit={handleEdit}
-                onCancel={onCancel}
-              />
-            )}
-          </Togglable>
-          <button className="delete-btn" onClick={handleDeleteClick}>
-            Delete
-          </button>
+          {!isEditing && (
+            <>
+              <button className="edit-btn" onClick={() => setIsEditing(true)}>
+                Edit
+              </button>
+              <button className="delete-btn" onClick={handleDeleteClick}>
+                Delete
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {isEditing && (
+        <HabitEditForm
+          id={id}
+          name={name}
+          impact={impact}
+          onSave={(updatedHabit) => {
+            handleEdit(id, updatedHabit);
+            setIsEditing(false);
+          }}
+          onCancel={() => setIsEditing(false)}
+        />
+      )}
     </div>
   );
 };
