@@ -147,7 +147,12 @@ func (api *api) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := api.jsonResponse(w, http.StatusCreated, token); err != nil {
+	userWithToken := UserWithToken{
+		User: user,
+		Token: token,
+	}
+
+	if err := api.jsonResponse(w, http.StatusCreated, userWithToken); err != nil {
 		api.internalServerError(w, r, err)
 	}
 }

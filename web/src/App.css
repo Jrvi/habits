@@ -1,27 +1,411 @@
 :root {
-  /* Pääpainike: vihertävän sininen */
-  --bs-primary: #3bb4a6;
+  /* Backgrounds */
+  --bg-page: #0F172A;      /* syvä tummansininen */
+  --bg-card: #1E293B;      /* kortit */
+  --bg-form: #273449;      /* lomakkeet */
+  --border: #334155;       /* hillitty borderi */
 
-  /* Positiiviset toiminnot */
-  --bs-success: #22c55e;
+  /* Text */
+  --text-primary: #F1F5F9; /* vaalea harmaa */
+  --text-secondary: #94A3B8; 
 
-  /* Varoitus (muokkaus) */
-  --bs-warning: #eab308;
+  /* Actions */
+  --accent: #06B6D4;       /* turkoosi */
+  --accent-dark: #0891B2;
+  --positive: #84CC16;     /* limevihreä */
+  --positive-dark: #65A30D;
+  --edit: #F97316;         /* oranssi */
+  --edit-dark: #EA580C;
+  --negative: #F43F5E;     /* pinkki-punainen */
+  --negative-dark: #E11D48;
 
-  /* Negatiiviset (poisto) */
-  --bs-danger: #e5534b;
+  /* Notifications */
+  --info-bg: #1E293B;
+  --info-text: #06B6D4;
+  --info-border: #0891B2;
 
-  /* Sekundääriset (peruuta, neutraali) */
-  --bs-secondary: #94a3b8;
+  --success-bg: #1E293B;
+  --success-text: #A3E635;
+  --success-border: #365314;
 
-  /* Info (korostus esim. linkeille) */
-  --bs-info: #06b6d4;
-
-  /* Taustat & teksti */
-  --bs-body-bg: #f0fdf4;   /* hyvin vaalea vihertävä tausta */
-  --bs-body-color: #1e293b;
+  --error-bg: #1E293B;
+  --error-text: #FB7185;
+  --error-border: #9F1239;
 }
 
-.bg-gradient {
-  background: linear-gradient(135deg, #d1fae5, #bfdbfe);
+/* ----- GENERAL LAYOUT ----- */
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.habit-form,
+.habit-edit-form,
+.notification,
+.habit-list,
+.user-info-card {
+  margin-bottom: 20px;
+}
+
+/* ----- AUTH FORMS (Login & Register) ----- */
+.auth-form {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 0 10px;
+}
+
+.login-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.auth-form h2 {
+  margin-bottom: 16px;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--bg-form);
+  color: var(--text-primary);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.3);
+}
+
+.auth-form button[type="submit"] {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.auth-form button[type="submit"]:hover {
+  background-color: var(--accent-dark);
+  transform: scale(1.03);
+}
+
+/* Vaihtolinkki login ↔ register */
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.9em;
+}
+
+.link-button:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+/* ----- NOTIFICATIONS ----- */
+.notification {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.notification.info {
+  background-color: var(--info-bg);
+  color: var(--info-text);
+  border: 1px solid var(--info-border);
+}
+
+.notification.success {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
+}
+
+.notification.error {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+}
+
+/* ----- HABIT ITEM ----- */
+.habit-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin: 14px 0;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.habit-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+}
+
+.habit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.habit-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.habit-header h2 {
+  margin: 0;
+  font-size: 1.25em;
+  color: var(--text-primary);
+}
+
+.habit-tag {
+  font-size: 0.8em;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.habit-tag.positive {
+  background-color: rgba(132, 204, 22, 0.2);
+  color: var(--positive);
+}
+
+.habit-tag.neutral {
+  background-color: rgba(148, 163, 184, 0.2);
+  color: var(--text-secondary);
+}
+
+.habit-tag.negative {
+  background-color: rgba(244, 63, 94, 0.2);
+  color: var(--negative);
+}
+
+.habit-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.habit-buttons button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.habit-buttons button:hover {
+  transform: scale(1.05);
+}
+
+.habit-buttons .delete-btn {
+  background-color: var(--negative);
+  color: white;
+}
+
+.habit-buttons .delete-btn:hover {
+  background-color: var(--negative-dark);
+}
+
+/* ----- HABIT FORM ----- */
+.habit-form {
+  margin-top: 20px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background-color: var(--bg-form);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.habit-form input,
+.habit-form select {
+  margin: 5px 0;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.habit-form button {
+  background-color: var(--positive);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.habit-form button:hover {
+  background-color: var(--positive-dark);
+  transform: scale(1.03);
+}
+
+.form-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* ----- HABIT EDIT FORM ----- */
+.habit-edit-form {
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: 10px;
+  background-color: var(--bg-form);
+  margin-top: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.habit-edit-form input,
+.habit-edit-form select {
+  margin: 5px 0;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.habit-edit-form button {
+  background-color: var(--edit);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.habit-edit-form button:hover {
+  background-color: var(--edit-dark);
+  transform: scale(1.03);
+}
+
+/* ----- TOGGLE BUTTONS + USER INFO ----- */
+.togglable button,
+.user-info-card button {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.togglable button:hover,
+.user-info-card button:hover {
+  background-color: var(--accent-dark);
+  transform: scale(1.03);
+}
+
+.user-info-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.user-greeting h2 {
+  margin: 0;
+  font-size: 1.3em;
+  color: var(--text-primary);
+}
+
+.user-greeting .username {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.user-greeting p {
+  margin: 4px 0 0;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.logout-btn {
+  background-color: var(--negative);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.logout-btn:hover {
+  background-color: var(--negative-dark);
+  transform: scale(1.05);
+}
+
+/* ----- LOGO ----- */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-text {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: var(--text-primary);
 }
