@@ -130,7 +130,7 @@ const App = () => {
           }
         />
 
-        {/* 🔴 Aktivointi polkuparametrilla */}
+        {/* Aktivointi polkuparametrilla */}
         <Route path="/activate/:token" element={<ActivationPage />} />
 
         {/* oletus ohjaa login-sivulle */}
@@ -173,7 +173,7 @@ const App = () => {
         }
       />
 
-      {/* 🟡 Aktivointi myös kirjautuneelle, varmuuden vuoksi */}
+      {/* Aktivointi myös kirjautuneelle, varmuuden vuoksi */}
       <Route path="/activate/:token" element={<ActivationPage />} />
     </Routes>
   )

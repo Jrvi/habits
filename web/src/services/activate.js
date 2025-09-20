@@ -1,9 +1,10 @@
-import axios from "axios"
-const baseUrl = '/v1/users/activate'
+import apiClient from "./apiClient"
+
+const baseUrl = "/v1/users/activate"
 
 const activate = async (token) => {
-    const response = await axios.put(`${baseUrl}/${token}`)
-    return response.data.data
+  const response = await apiClient.put(`${baseUrl}/${token}`)
+  return response.data.data
 }
 
 export default { activate }
