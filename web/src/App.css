@@ -189,12 +189,18 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0; /* flex child voi kutistua */
 }
 
 .habit-header h2 {
   margin: 0;
   font-size: 1.25em;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
 }
 
 .habit-tag {
@@ -359,17 +365,28 @@ body {
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  min-width: 0;
 }
 
 .user-greeting h2 {
   margin: 0;
   font-size: 1.3em;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
 }
 
 .user-greeting .username {
   color: var(--accent);
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: inline-block;
 }
 
 .user-greeting p {
@@ -408,4 +425,58 @@ body {
   font-size: 1.4em;
   font-weight: bold;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
+}
+
+/* ----- MOBILE STYLES ----- */
+@media (max-width: 600px) {
+  .container {
+    padding: 12px;
+    max-width: 100%;
+  }
+
+  .auth-form {
+    margin: 20px auto;
+    padding: 0 8px;
+    max-width: 100%;
+  }
+
+  .form-group input {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .auth-form button[type="submit"],
+  .habit-form button,
+  .habit-edit-form button,
+  .togglable button,
+  .user-info-card button {
+    font-size: 1em;
+    padding: 12px;
+    width: 100%;
+  }
+
+  .habit-card {
+    padding: 14px;
+    margin: 10px 0;
+  }
+
+  .habit-header h2 {
+    font-size: 1.1em;
+  }
+
+  .user-info-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .logout-btn {
+    align-self: stretch;
+    justify-content: center;
+  }
 }
