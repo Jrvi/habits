@@ -44,3 +44,21 @@ func (api *api) unauthorizedBasicErrorResponse(w http.ResponseWriter, r *http.Re
 
 	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 }
+
+func (api *api) notFoundError(w http.ResponseWriter, r *http.Request, err error) {
+	api.logger.Warnf("not found", "method", r.Method, "path", r.URL.Path, "error", err)
+
+	writeJSONError(w, http.StatusNotFound, "not found")
+}
+
+func (api *api) forbiddenError(w http.ResponseWriter, r *http.Request) {
+	api.logger.Warnf("forbidden", "method", r.Method, "path", r.URL.Path)
+
+	writeJSONError(w, http.StatusForbidden, "forbidden")
+}
+
+func (api *api) conflictError(w http.ResponseWriter, r *http.Request, err error) {
+	api.logger.Warnf("conflict", "method", r.Method, "path", r.URL.Path, "error", err)
+
+	writeJSONError(w, http.StatusConflict, err.Error())
+}

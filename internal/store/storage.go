@@ -16,25 +16,49 @@ var (
 type Storage struct {
 	Habits interface {
 		Create(ctx context.Context, habit *Habit) error
-		GetByID(ctx context.Context, id int64) (*Habit, error)
-		Delete(ctx context.Context, id int64) error
-		Update(ctx context.Context, habit *Habit) error
+		GetByID(ctx context.Context, id int64, userID int64) (*Habit, error)
+		Delete(ctx context.Context, id int64, userID int64) error
+		Update(ctx context.Context, habit *Habit, userID int64) error
 		GetUserFeed(ctx context.Context, userID int64, fg PaginatedFeedQuery) ([]Habit, error)
 	}
 	Users interface {
 		Create(ctx context.Context, tx *sql.Tx, user *User) error
 		GetByID(ctx context.Context, userID int64) (*User, error)
+		GetByPublicID(ctx context.Context, publicID string) (*User, error)
 		CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error
 		Activate(ctx context.Context, token string) error
 		Delete(ctx context.Context, userID int64) error
-    GetByEmail(ctx context.Context, email string) (*User, error)
+		GetByEmail(ctx context.Context, email string) (*User, error)
+		UpdateEmail(ctx context.Context, userID int64, email string) (*User, error)
+		UpdatePassword(ctx context.Context, userID int64, passwordHash []byte) error
+	}
+	PasswordResetTokens interface {
+		Create(ctx context.Context, userID int64, tokenHash string, expiry time.Time) error
+		Consume(ctx context.Context, tokenHash string, now time.Time, passwordHash []byte) error
+	}
+	Goals interface {
+		Create(ctx context.Context, goal *Goal) error
+		GetByID(ctx context.Context, id int64) (*Goal, error)
+		GetByUserAndYear(ctx context.Context, userID int64, year int) ([]Goal, error)
+		Update(ctx context.Context, goal *Goal) error
+		Delete(ctx context.Context, id int64, userID int64) error
+	}
+	HabitCompletions interface {
+		MarkComplete(ctx context.Context, habitID, userID int64, date time.Time) (*HabitCompletion, error)
+		UnmarkComplete(ctx context.Context, habitID int64, date time.Time) error
+		GetByHabitAndDate(ctx context.Context, habitID int64, date time.Time) (*HabitCompletion, error)
+		GetCompletionsByHabit(ctx context.Context, habitID int64, startDate, endDate time.Time) ([]HabitCompletion, error)
+		GetCompletionsByUser(ctx context.Context, userID int64, startDate, endDate time.Time) ([]HabitCompletion, error)
 	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Habits: &HabitStore{db},
-		Users:  &UserStore{db},
+		Habits:              &HabitStore{db},
+		Users:               &UserStore{db},
+		Goals:               &GoalStore{db},
+		HabitCompletions:    &HabitCompletionStore{db},
+		PasswordResetTokens: &PasswordResetTokenStore{db},
 	}
 }
 

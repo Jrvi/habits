@@ -3,8 +3,10 @@ package mailer
 import (
 	"bytes"
 	"errors"
-	gomail "gopkg.in/mail.v2"
+	"fmt"
 	"html/template"
+
+	gomail "gopkg.in/mail.v2"
 )
 
 type mailtrapClient struct {
@@ -44,10 +46,19 @@ func (m mailtrapClient) Send(templateFile, username, email string, data any, isS
 
 	message := gomail.NewMessage()
 	message.SetHeader("From", m.fromEmail)
-	message.SetHeader("To", email)
-	message.SetHeader("Subject", subject.String())
 
+	message.SetHeader("To", email)
+
+	message.SetHeader("Subject", subject.String())
 	message.AddAlternative("text/html", body.String())
+
+	if isSandbox {
+		fmt.Println("DEV: skipping email sending in sandbox mode")
+		fmt.Println("To:", email)
+		fmt.Println("Subject:", subject.String())
+		fmt.Println("Body:", body.String())
+		return 200, nil
+	}
 
 	dialer := gomail.NewDialer("live.smtp.mailtrap.io", 587, "api", m.apiKey)
 

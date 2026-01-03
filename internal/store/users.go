@@ -17,7 +17,8 @@ var (
 )
 
 type User struct {
-	ID        int64    `json:"id"`
+	ID        int64    `json:"-"`
+	PublicID  string   `json:"id"`
 	Username  string   `json:"username"`
 	Email     string   `json:"email"`
 	Password  password `json:"_"`
@@ -42,19 +43,62 @@ func (p *password) Set(text string) error {
 	return nil
 }
 
+func (p *password) Matches(plain string) bool {
+	err := bcrypt.CompareHashAndPassword(p.hash, []byte(plain))
+	return err == nil
+}
+
+func (p *password) Hash() []byte {
+	return p.hash
+}
+
 type UserStore struct {
 	db *sql.DB
 }
 
-func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
+func (s *UserStore) GetByPublicID(ctx context.Context, publicID string) (*User, error) {
 	query := `
-		INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING id, created_at
+		SELECT id, public_id, username, email, password, created_at, is_active
+		FROM users
+		WHERE public_id = $1 AND is_active = true
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	err := tx.QueryRowContext(ctx, query, user.Username, user.Password.hash, user.Email).Scan(&user.ID, &user.CreatedAt)
+	user := &User{}
+	err := s.db.QueryRowContext(ctx, query, publicID).Scan(
+		&user.ID,
+		&user.PublicID,
+		&user.Username,
+		&user.Email,
+		&user.Password.hash,
+		&user.CreatedAt,
+		&user.IsActive,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return user, nil
+}
+
+func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
+	query := `
+		INSERT INTO users (username, password, email)
+		VALUES ($1, $2, $3)
+		RETURNING id, public_id, created_at
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := tx.QueryRowContext(ctx, query, user.Username, user.Password.hash, user.Email).Scan(&user.ID, &user.PublicID, &user.CreatedAt)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
@@ -71,7 +115,9 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 
 func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 	query := `
-		SELECT id, username, email, password, created_at FROM users WHERE id = $1
+		SELECT id, public_id, username, email, password, created_at, is_active
+		FROM users
+		WHERE id = $1
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -81,10 +127,12 @@ func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
+		&user.PublicID,
 		&user.Username,
 		&user.Email,
 		&user.Password.hash,
 		&user.CreatedAt,
+		&user.IsActive,
 	)
 	if err != nil {
 		switch {
@@ -117,16 +165,16 @@ func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token strin
 func (s *UserStore) Activate(ctx context.Context, token string) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		user, err := s.getUserFromInvitation(ctx, tx, token)
-		if err !=  nil {
+		if err != nil {
 			return err
 		}
 
 		user.IsActive = true
-	if err := s.update(ctx, tx, user); err != nil {
+		if err := s.update(ctx, tx, user); err != nil {
 			return err
 		}
 
-	if err := s.deleteUserInvitations(ctx, tx, user.ID); err != nil {
+		if err := s.deleteUserInvitations(ctx, tx, user.ID); err != nil {
 			return err
 		}
 
@@ -136,7 +184,7 @@ func (s *UserStore) Activate(ctx context.Context, token string) error {
 
 func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, token string) (*User, error) {
 	query := `
-		SELECT u.id, u.username, u.email, u.created_at, u.is_active
+		SELECT u.id, u.public_id, u.username, u.email, u.created_at, u.is_active
 		FROM users u
 		JOIN user_invitations ui ON u.id = ui.user_id
 		WHERE ui.token = $1 AND ui.expiry > $2
@@ -151,6 +199,7 @@ func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, token
 	user := &User{}
 	err := tx.QueryRowContext(ctx, query, hashToken, time.Now()).Scan(
 		&user.ID,
+		&user.PublicID,
 		&user.Username,
 		&user.Email,
 		&user.CreatedAt,
@@ -240,7 +289,8 @@ func (s *UserStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
 
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, username, email, password, created_at FROM users
+		SELECT id, public_id, username, email, password, created_at, is_active
+		FROM users
 		WHERE email = $1 AND is_active = true
 	`
 
@@ -250,10 +300,12 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 	user := &User{}
 	err := s.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
+		&user.PublicID,
 		&user.Username,
 		&user.Email,
 		&user.Password.hash,
 		&user.CreatedAt,
+		&user.IsActive,
 	)
 	if err != nil {
 		switch err {
@@ -265,4 +317,56 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 	}
 
 	return user, nil
+}
+
+func (s *UserStore) UpdateEmail(ctx context.Context, userID int64, email string) (*User, error) {
+	query := `UPDATE users SET email = $1 WHERE id = $2 RETURNING id, public_id, username, email, password, created_at, is_active`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	user := &User{}
+	err := s.db.QueryRowContext(ctx, query, email, userID).Scan(
+		&user.ID,
+		&user.PublicID,
+		&user.Username,
+		&user.Email,
+		&user.Password.hash,
+		&user.CreatedAt,
+		&user.IsActive,
+	)
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
+			return nil, ErrDuplicateEmail
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return user, nil
+}
+
+func (s *UserStore) UpdatePassword(ctx context.Context, userID int64, passwordHash []byte) error {
+	query := `UPDATE users SET password = $1 WHERE id = $2`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	res, err := s.db.ExecContext(ctx, query, passwordHash, userID)
+	if err != nil {
+		return err
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }

@@ -94,21 +94,43 @@ func (api *api) mount() http.Handler {
 			r.Route("/{habitID}", func(r chi.Router) {
 				r.Use(api.habitContextMiddleware)
 				r.Get("/", api.getHabitHandler)
-        r.Delete("/", api.deleteHabitHandler)
-        r.Patch("/", api.updateHabitHandler)
+				r.Delete("/", api.deleteHabitHandler)
+				r.Patch("/", api.updateHabitHandler)
+
+				// Completion endpoints
+				r.Post("/complete", api.markHabitCompleteHandler)
+				r.Delete("/complete/{date}", api.unmarkHabitCompleteHandler)
+				r.Get("/completions", api.getHabitCompletionsHandler)
+			})
+		})
+
+		// User completions
+		r.Route("/completions", func(r chi.Router) {
+			r.Use(api.AuthTokenMiddleware)
+			r.Get("/", api.getUserCompletionsHandler)
+		})
+
+		r.Route("/goals", func(r chi.Router) {
+			r.Use(api.AuthTokenMiddleware)
+			r.Post("/", api.createGoalHandler)
+			r.Get("/year/{year}", api.getGoalsByYearHandler)
+
+			r.Route("/{goalID}", func(r chi.Router) {
+				r.Use(api.goalContextMiddleware)
+				r.Get("/", api.getGoalHandler)
+				r.Patch("/", api.updateGoalHandler)
+				r.Delete("/", api.deleteGoalHandler)
 			})
 		})
 
 		r.Route("/users", func(r chi.Router) {
 			r.Put("/activate/{token}", api.activateUserHandler)
 
-			r.Route("/{userID}", func(r chi.Router) {
-				r.Use(api.userContextMiddleware)
-				r.Get("/", api.getUserHandler)
-			})
-
 			r.Group(func(r chi.Router) {
 				r.Use(api.AuthTokenMiddleware)
+				r.Get("/me", api.getMeHandler)
+				r.Patch("/me/email", api.updateMyEmailHandler)
+				r.Patch("/me/password", api.updateMyPasswordHandler)
 				r.Get("/feed", api.getUserFeedHandler)
 			})
 		})
@@ -117,6 +139,8 @@ func (api *api) mount() http.Handler {
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", api.registerUserHandler)
 			r.Post("/token", api.createTokenHandler)
+			r.Post("/forgot-password", api.forgotPasswordHandler)
+			r.Post("/reset-password", api.resetPasswordHandler)
 		})
 	})
 
