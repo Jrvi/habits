@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import HabitEditForm from "./HabitEditForm";
+import WeekTracker from "./WeekTracker";
 import goalsService from '../services/goals.js'
 
 const Habit = ({ id, name, impact, goalId, handleDelete, handleEdit }) => {
@@ -64,6 +65,10 @@ const Habit = ({ id, name, impact, goalId, handleDelete, handleEdit }) => {
           }}
           onCancel={() => setIsEditing(false)}
         />
+      )}
+
+      {!isEditing && (
+        <WeekTracker habitId={id} habitImpact={impact} />
       )}
     </div>
   );

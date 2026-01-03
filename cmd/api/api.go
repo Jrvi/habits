@@ -96,7 +96,18 @@ func (api *api) mount() http.Handler {
 				r.Get("/", api.getHabitHandler)
 				r.Delete("/", api.deleteHabitHandler)
 				r.Patch("/", api.updateHabitHandler)
+
+				// Completion endpoints
+				r.Post("/complete", api.markHabitCompleteHandler)
+				r.Delete("/complete/{date}", api.unmarkHabitCompleteHandler)
+				r.Get("/completions", api.getHabitCompletionsHandler)
 			})
+		})
+
+		// User completions
+		r.Route("/completions", func(r chi.Router) {
+			r.Use(api.AuthTokenMiddleware)
+			r.Get("/", api.getUserCompletionsHandler)
 		})
 
 		r.Route("/goals", func(r chi.Router) {

@@ -13,6 +13,7 @@ import habitsService from './services/habits'
 import registerService from './services/register.js'
 import feedService from './services/feed'
 import goalsService from './services/goals'
+import completionsService from './services/completions'
 import './App.css'
 import Togglable from './components/Togglable.jsx'
 
@@ -30,6 +31,7 @@ const App = () => {
       habitsService.setToken(user.token)
       feedService.setToken(user.token)
       goalsService.setToken(user.token)
+      completionsService.setToken(user.token)
     }
   }, [])
 
@@ -59,6 +61,7 @@ const App = () => {
       habitsService.setToken(user.token)
       feedService.setToken(user.token)
       goalsService.setToken(user.token)
+      completionsService.setToken(user.token)
       setNotification({ message: 'Login successful', type: 'success' })
       setTimeout(() => setNotification(null), 5000)
       navigate('/')

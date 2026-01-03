@@ -744,3 +744,114 @@ body {
   flex: 1;
 }
 
+/* ----- WEEK TRACKER ----- */
+.week-tracker {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: var(--bg-page);
+  border-radius: 8px;
+}
+
+.tracker-stats {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-label {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.day-button {
+  position: relative;
+  background-color: var(--bg-form);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.day-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.day-button.today {
+  border-color: var(--accent);
+  background-color: rgba(6, 182, 212, 0.1);
+}
+
+.day-button.completed {
+  background-color: var(--positive);
+  border-color: var(--positive);
+  color: var(--bg-page);
+}
+
+.day-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.day-name {
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.day-number {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.check-mark {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  .week-days {
+    gap: 4px;
+  }
+
+  .day-button {
+    padding: 8px 3px;
+  }
+
+  .day-name {
+    font-size: 0.65em;
+  }
+
+  .day-number {
+    font-size: 0.95em;
+  }
+}
+

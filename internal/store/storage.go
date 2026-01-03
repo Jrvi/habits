@@ -36,13 +36,21 @@ type Storage struct {
 		Update(ctx context.Context, goal *Goal) error
 		Delete(ctx context.Context, id int64, userID int64) error
 	}
+	HabitCompletions interface {
+		MarkComplete(ctx context.Context, habitID, userID int64, date time.Time) (*HabitCompletion, error)
+		UnmarkComplete(ctx context.Context, habitID int64, date time.Time) error
+		GetByHabitAndDate(ctx context.Context, habitID int64, date time.Time) (*HabitCompletion, error)
+		GetCompletionsByHabit(ctx context.Context, habitID int64, startDate, endDate time.Time) ([]HabitCompletion, error)
+		GetCompletionsByUser(ctx context.Context, userID int64, startDate, endDate time.Time) ([]HabitCompletion, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Habits: &HabitStore{db},
-		Users:  &UserStore{db},
-		Goals:  &GoalStore{db},
+		Habits:           &HabitStore{db},
+		Users:            &UserStore{db},
+		Goals:            &GoalStore{db},
+		HabitCompletions: &HabitCompletionStore{db},
 	}
 }
 
