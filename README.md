@@ -1,110 +1,76 @@
-# Habit Tracker
+# Habits (Habitisti)
 
-Habit Tracker on moderni web-sovellus, jonka avulla käyttäjä voi hallita
-ja seurata tapojaan.\
-Sovellus on rakennettu **Reactilla** ja hyödyntää **REST APIa**
-käyttäjien hallintaan ja tietojen tallennukseen.
+Habits on habit tracking -sovellus: Go + PostgreSQL backend ja React (Vite) web-frontend.
+Sovellus tukee käyttäjätilejä, vuosittaisia tavoitteita ja tapojen päivittäistä seurantaa.
 
-## ✨ Ominaisuudet
+## Ominaisuudet
 
--   🔑 **Käyttäjän rekisteröinti ja kirjautuminen** (JWT-tokenit,
-    salasanan hash)
--   ✅ **Tapojen lisääminen, muokkaaminen ja poistaminen**
--   🎯 **Impact-luokittelu**: positive, neutral, negative
--   📱 **Responsiivinen käyttöliittymä** (toimii hyvin mobiilissa ja
-    desktopilla)
--   🔔 **Notifikaatiot** onnistuneista ja epäonnistuneista toimista
--   👤 **Käyttäjäprofiili** ja logout
--   🌓 **Dark mode** (valmiina CSS-tyyleissä)
+- Käyttäjän rekisteröinti, aktivointi ja kirjautuminen (JWT)
+- Käyttäjän julkinen tunniste UUID:na (API palauttaa `id` = public UUID, sisäinen numero-ID on piilossa)
+- Tietoturva: käyttäjä näkee/muokkaa vain omia tapojaan/tavoitteitaan (DB-tason suodatus + middleware)
+- Tavat (CRUD) ja vaikutusluokka: positive / neutral / negative
+- Päivittäiset merkinnät (completions) + viikonäkymä (Monday-first)
+- Vuosittaiset tavoitteet (goals) ja tapojen linkitys tavoitteisiin
+- Profiili: sähköpostin ja salasanan vaihto
+- Unohtuiko salasana / reset password -flow
+- Kaksikielisyys (FI/EN) webissä
 
-> 🚧 Tulossa: tapojen **päivittäinen seuranta** ja **tilastot**
-> (kalenteri, progress bar)
+## Teknologiat
 
-------------------------------------------------------------------------
+- Backend: Go, chi, JWT, PostgreSQL, SQL migrations
+- Frontend: React + Vite, react-router, axios
+- Dev: docker compose (Postgres), make (migrations)
 
-## 🛠️ Teknologiat
+## Paikallinen kehitys
 
--   **Frontend**: React (Vite), react-router-dom, axios
--   **Backend**: Go (REST API)
--   **Tyylit**: Custom CSS variables, responsiivinen design
--   **Build/Dev**: Vite
+### 1) Ympäristömuuttujat
 
-------------------------------------------------------------------------
+Tarkista `.env` (esim. `DB_ADDR`, `AUTH_TOKEN_SECRET`, `FRONTEND_URL`).
 
-## 📦 Asennus ja käyttö
+Huom: backend muodostaa aktivointi- ja reset-linkit `FRONTEND_URL`:n perusteella.
+Jos käytät Viten dev-serveriä, aseta `FRONTEND_URL=http://localhost:5173`.
 
-### 1. Kloonaa repo
+### 2) Käynnistä tietokanta
 
-``` bash
-git clone https://github.com/kayttaja/habit-tracker.git
-cd habit-tracker
+```bash
+docker compose up -d db
 ```
 
-### 2. Asenna riippuvuudet
+### 3) Aja migraatiot
 
-``` bash
-npm install
+```bash
+make migrate-up
 ```
 
-### 3. Käynnistä kehityspalvelin
+### 4) Käynnistä backend
 
-``` bash
-npm run dev
+```bash
+go run ./cmd/api
 ```
 
-Frontend käynnistyy oletuksena osoitteessa:\
-👉 http://localhost:5173
+API oletuksena: `http://localhost:8080`
 
-### 4. Backend
+### 5) Käynnistä web-frontend
 
-Käynnistä myös Go-API (oletuksena `http://localhost:8080`).\
-Esim:
-
-``` bash
-go run cmd/api/main.go
+```bash
+npm --prefix web install
+npm --prefix web run dev
 ```
 
-------------------------------------------------------------------------
+Frontend oletuksena: `http://localhost:5173`
 
-## 🔑 Käyttäjänhallinta
+## Testit ja deploy
 
--   Rekisteröitymisen jälkeen saat aktivointilinkin sähköpostiin.\
+- Go integraatiotestit (Postgres vaaditaan): `go test ./...`
+- CI (GitHub Actions) ajaa migraatiot + backend testit + web buildin ennen Fly-deployta.
 
--   Aktivointi tapahtuu osoitteessa:
+## Projektirakenne
 
-        http://localhost:5173/activate/:token
+- `cmd/api`: HTTP API ja middlewaret
+- `cmd/migrate/migrations`: SQL-migraatiot
+- `internal/store`: SQL-kyselyt ja domain-mallit
+- `web`: React/Vite frontend
 
--   Kirjautumisen jälkeen JWT tallennetaan selaimen localStorageen.
-
-------------------------------------------------------------------------
-
-## 📂 Projektirakenne
-
-    src/
-     ├─ components/      # React-komponentit (Habit, HabitList, Forms, ...)
-     ├─ services/        # API-kutsut (axios)
-     ├─ App.jsx          # Reititys, layout
-     ├─ main.jsx         # Sovelluksen entrypoint
-     └─ styles/          # CSS (App.css)
-
-------------------------------------------------------------------------
-
-## 🖼️ Kuvakaappauksia
-
-*(Lisää screenshotit myöhemmin)*
-
-------------------------------------------------------------------------
-
-## 🚀 Tulevat kehitysideat
-
--   [ ] Päivittäinen **habit-seuranta** (checkmarkit, historia)
--   [ ] Viikkotilastot & progress bar
--   [ ] Käyttäjän avatar ja profiilin muokkaus
--   [ ] Light/Dark mode toggle
--   [ ] Push-notifikaatiot ja muistutukset
-
-------------------------------------------------------------------------
-
-## 📜 Lisenssi
+## Lisenssi
 
 MIT
