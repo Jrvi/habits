@@ -7,10 +7,12 @@ import Notification from './components/Notification.jsx'
 import UserInfo from './components/UserInfo'
 import HabitForm from './components/HabitForm'
 import HabitList from './components/HabitList'
+import GoalList from './components/GoalList'
 import loginService from './services/login'
 import habitsService from './services/habits'
 import registerService from './services/register.js'
 import feedService from './services/feed'
+import goalsService from './services/goals'
 import './App.css'
 import Togglable from './components/Togglable.jsx'
 
@@ -27,6 +29,7 @@ const App = () => {
       setUser(user)
       habitsService.setToken(user.token)
       feedService.setToken(user.token)
+      goalsService.setToken(user.token)
     }
   }, [])
 
@@ -55,6 +58,7 @@ const App = () => {
       setUser(user)
       habitsService.setToken(user.token)
       feedService.setToken(user.token)
+      goalsService.setToken(user.token)
       setNotification({ message: 'Login successful', type: 'success' })
       setTimeout(() => setNotification(null), 5000)
       navigate('/')
@@ -152,6 +156,9 @@ const App = () => {
           <div className="container">
             <UserInfo user={user} handleLogout={handleLogout} />
             <Notification notification={notification} />
+            
+            <GoalList />
+            
             <HabitList
               habits={habits}
               setHabits={setHabits}

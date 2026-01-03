@@ -42,7 +42,15 @@ const HabitList = ({ habits, setHabits, setNotification }) => {
   return (
     <div>
       {habits.map(habit => (
-        <Habit key={habit.id} id={habit.id} name={habit.name} impact={habit.impact} handleDelete={handleDelete} handleEdit={handleEdit} />
+        <Habit 
+          key={habit.id} 
+          id={habit.id} 
+          name={habit.name} 
+          impact={habit.impact}
+          goalId={habit.goal_id}
+          handleDelete={handleDelete} 
+          handleEdit={handleEdit} 
+        />
       ))}
     </div>
   )

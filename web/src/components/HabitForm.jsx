@@ -1,12 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import habitsService from '../services/habits.js'
+import goalsService from '../services/goals.js'
 
 const HabitForm = ({ user, habits, setHabits, setNotification, onCancel }) => {
   const [name, setName] = useState('')
   const [impact, setImpact] = useState('')
+  const [goalId, setGoalId] = useState('')
+  const [goals, setGoals] = useState([])
+
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const currentYear = new Date().getFullYear()
+        const data = await goalsService.getByYear(currentYear)
+        setGoals(data || [])
+      } catch (error) {
+        console.error('Error fetching goals:', error)
+      }
+    }
+    fetchGoals()
+  }, [])
+
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const newHabit = { name, impact }
+    const newHabit = { 
+      name, 
+      impact,
+      goal_id: goalId ? parseInt(goalId) : null
+    }
 
     try {
       const createdHabit = await habitsService.create(newHabit)
@@ -19,6 +40,7 @@ const HabitForm = ({ user, habits, setHabits, setNotification, onCancel }) => {
       setHabits(habits.concat(createdHabit))
       setName('')
       setImpact('')
+      setGoalId('')
     } catch (error) {
       setNotification({ message: 'Error creating habit', type: 'error' })
       setTimeout(() => {
@@ -26,6 +48,13 @@ const HabitForm = ({ user, habits, setHabits, setNotification, onCancel }) => {
       }, 5000)
       console.error('Error creating habit:', error)
     }
+  }
+
+  const CATEGORY_LABELS = {
+    career: 'Ura',
+    financial: 'Raha',
+    health: 'Terveys',
+    learning: 'Oppiminen'
   }
 
   return (
@@ -55,6 +84,23 @@ const HabitForm = ({ user, habits, setHabits, setNotification, onCancel }) => {
               <option value="positive">positive</option>
               <option value="neutral">neutral</option>
               <option value="negative">negative</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label>
+            Tavoite (valinnainen):
+            <select
+              value={goalId}
+              onChange={(e) => setGoalId(e.target.value)}
+            >
+              <option value="">-- ei tavoitetta --</option>
+              {goals.map(goal => (
+                <option key={goal.id} value={goal.id}>
+                  {CATEGORY_LABELS[goal.category]} - {goal.description.substring(0, 50)}
+                  {goal.description.length > 50 ? '...' : ''}
+                </option>
+              ))}
             </select>
           </label>
         </div>

@@ -16,6 +16,7 @@ type Habit struct {
 	Name       string `json:"name"`
 	UserID     int64  `json:"user_id"`
 	Impact     string `json:"impact"`
+	GoalID     *int64 `json:"goal_id"`
 	Created_at string `json:"created_at"`
 	Updated_at string `json:"updated_at"`
 	Version    int    `json:"version"`
@@ -28,14 +29,14 @@ type HabitStore struct {
 
 func (s *HabitStore) Create(ctx context.Context, habit *Habit) error {
 	query := `
-    INSERT INTO habits (name, impact, user_id)
-    VALUES  ($1, $2, $3) RETURNING id, created_at, updated_at
+    INSERT INTO habits (name, impact, user_id, goal_id)
+    VALUES  ($1, $2, $3, $4) RETURNING id, created_at, updated_at
   `
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	err := s.db.QueryRowContext(ctx, query, habit.Name, habit.Impact, habit.UserID).Scan(
+	err := s.db.QueryRowContext(ctx, query, habit.Name, habit.Impact, habit.UserID, habit.GoalID).Scan(
 		&habit.ID,
 		&habit.Created_at,
 		&habit.Updated_at,
@@ -50,7 +51,7 @@ func (s *HabitStore) Create(ctx context.Context, habit *Habit) error {
 
 func (s *HabitStore) GetByID(ctx context.Context, id int64) (*Habit, error) {
 	query := `
-    SELECT id, name, impact, created_at, updated_at, version
+    SELECT id, name, impact, goal_id, created_at, updated_at, version
     FROM habits
     WHERE id = $1
   `
@@ -64,6 +65,7 @@ func (s *HabitStore) GetByID(ctx context.Context, id int64) (*Habit, error) {
 		&habit.ID,
 		&habit.Name,
 		&habit.Impact,
+		&habit.GoalID,
 		&habit.Created_at,
 		&habit.Updated_at,
 		&habit.Version,
@@ -87,6 +89,7 @@ func (s *HabitStore) GetUserFeed(ctx context.Context, userID int64, fq Paginated
   		h.name,
       h.user_id,
      	h.impact,
+		  h.goal_id,
 		  h.created_at,
       h.version
 		FROM habits h
@@ -112,6 +115,7 @@ func (s *HabitStore) GetUserFeed(ctx context.Context, userID int64, fq Paginated
 			&h.Name,
 			&h.UserID,
 			&h.Impact,
+			&h.GoalID,
 			&h.Created_at,
 			&h.Version,
 		); err != nil {
@@ -150,15 +154,15 @@ func (s *HabitStore) Delete(ctx context.Context, postID int64) error {
 func (s *HabitStore) Update(ctx context.Context, habit *Habit) error {
 	query := `
 		UPDATE habits
-		SET name = $1, impact = $2, version = version + 1
-		WHERE id = $3 AND version = $4
+		SET name = $1, impact = $2, goal_id = $3, version = version + 1
+		WHERE id = $4 AND version = $5
 		RETURNING version
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	err := s.db.QueryRowContext(ctx, query, habit.Name, habit.Impact, habit.ID, habit.Version).Scan(&habit.Version)
+	err := s.db.QueryRowContext(ctx, query, habit.Name, habit.Impact, habit.GoalID, habit.ID, habit.Version).Scan(&habit.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):

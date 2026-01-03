@@ -94,8 +94,21 @@ func (api *api) mount() http.Handler {
 			r.Route("/{habitID}", func(r chi.Router) {
 				r.Use(api.habitContextMiddleware)
 				r.Get("/", api.getHabitHandler)
-        r.Delete("/", api.deleteHabitHandler)
-        r.Patch("/", api.updateHabitHandler)
+				r.Delete("/", api.deleteHabitHandler)
+				r.Patch("/", api.updateHabitHandler)
+			})
+		})
+
+		r.Route("/goals", func(r chi.Router) {
+			r.Use(api.AuthTokenMiddleware)
+			r.Post("/", api.createGoalHandler)
+			r.Get("/year/{year}", api.getGoalsByYearHandler)
+
+			r.Route("/{goalID}", func(r chi.Router) {
+				r.Use(api.goalContextMiddleware)
+				r.Get("/", api.getGoalHandler)
+				r.Patch("/", api.updateGoalHandler)
+				r.Delete("/", api.deleteGoalHandler)
 			})
 		})
 

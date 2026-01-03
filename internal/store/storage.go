@@ -27,7 +27,14 @@ type Storage struct {
 		CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error
 		Activate(ctx context.Context, token string) error
 		Delete(ctx context.Context, userID int64) error
-    GetByEmail(ctx context.Context, email string) (*User, error)
+		GetByEmail(ctx context.Context, email string) (*User, error)
+	}
+	Goals interface {
+		Create(ctx context.Context, goal *Goal) error
+		GetByID(ctx context.Context, id int64) (*Goal, error)
+		GetByUserAndYear(ctx context.Context, userID int64, year int) ([]Goal, error)
+		Update(ctx context.Context, goal *Goal) error
+		Delete(ctx context.Context, id int64, userID int64) error
 	}
 }
 
@@ -35,6 +42,7 @@ func NewStorage(db *sql.DB) Storage {
 	return Storage{
 		Habits: &HabitStore{db},
 		Users:  &UserStore{db},
+		Goals:  &GoalStore{db},
 	}
 }
 

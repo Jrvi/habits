@@ -15,8 +15,9 @@ type habitKey string
 const habitCtxKey habitKey = "habit"
 
 type CreateHabitPayload struct {
-	Name   string `json:"name" validate:"required,max=50`
-	Impact string `json:"impact" validate:"required,max=25`
+	Name   string `json:"name" validate:"required,max=50"`
+	Impact string `json:"impact" validate:"required,max=25"`
+	GoalID *int64 `json:"goal_id"`
 }
 
 func (api *api) createHabitHandler(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +38,7 @@ func (api *api) createHabitHandler(w http.ResponseWriter, r *http.Request) {
 		Name:   payload.Name,
 		Impact: payload.Impact,
 		UserID: user.ID,
+		GoalID: payload.GoalID,
 	}
 
 	ctx := r.Context()
@@ -115,6 +117,7 @@ func (api *api) deleteHabitHandler(w http.ResponseWriter, r *http.Request) {
 type UpdateHabitPayload struct {
 	Name   *string `json:"name" validate:"omitempty,max=50"`
 	Impact *string `json:"impact" validate:"omitempty,max=25"`
+	GoalID *int64  `json:"goal_id"`
 }
 
 func (api *api) updateHabitHandler(w http.ResponseWriter, r *http.Request) {
@@ -137,6 +140,10 @@ func (api *api) updateHabitHandler(w http.ResponseWriter, r *http.Request) {
 
 	if payload.Impact != nil {
 		habit.Impact = *payload.Impact
+	}
+
+	if payload.GoalID != nil {
+		habit.GoalID = payload.GoalID
 	}
 
 	api.logger.Info("Updating habit", "id", habit.ID, "version", habit.Version, "impact", habit.Impact)
