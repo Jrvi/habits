@@ -27,7 +27,6 @@ const LoginForm = ({ handleLogin }) => {
             id="email"
             type="email"
             name="Email"
-            placeholder="you@example.com"
             value={email}
             onChange={({ target }) => setEmail(target.value)}
             required
@@ -40,7 +39,6 @@ const LoginForm = ({ handleLogin }) => {
             id="password"
             type="password"
             name="Password"
-            placeholder="••••••••"
             value={password}
             onChange={({ target }) => setPassword(target.value)}
             required

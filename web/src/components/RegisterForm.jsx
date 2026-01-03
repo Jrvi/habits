@@ -37,7 +37,6 @@ const RegisterForm = ({ handleRegister }) => {
             id="username"
             type="text"
             name="Username"
-            placeholder="habitlover"
             value={username}
             onChange={({ target }) => setUsername(target.value)}
             required
@@ -50,7 +49,6 @@ const RegisterForm = ({ handleRegister }) => {
             id="email"
             type="email"
             name="Email"
-            placeholder="you@example.com"
             value={email}
             onChange={({ target }) => setEmail(target.value)}
             required
@@ -63,7 +61,6 @@ const RegisterForm = ({ handleRegister }) => {
             id="password"
             type="password"
             name="Password"
-            placeholder="••••••••"
             value={password}
             onChange={({ target }) => setPassword(target.value)}
             required
@@ -76,7 +73,6 @@ const RegisterForm = ({ handleRegister }) => {
             id="confirmPassword"
             type="password"
             name="ConfirmPassword"
-            placeholder="••••••••"
             value={confirmPassword}
             onChange={({ target }) => setConfirmPassword(target.value)}
             required
