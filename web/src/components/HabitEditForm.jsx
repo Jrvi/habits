@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import goalsService from '../services/goals.js'
+import { t } from '../i18n/translations.js'
 
 const HabitEditForm = ({ id, name, impact, goalId, onSave, onCancel }) => {
   const [newName, setNewName] = useState(name);
@@ -30,10 +31,10 @@ const HabitEditForm = ({ id, name, impact, goalId, onSave, onCancel }) => {
   };
 
   const CATEGORY_LABELS = {
-    career: 'Ura',
-    financial: 'Raha',
-    health: 'Terveys',
-    learning: 'Oppiminen'
+    career: t('career'),
+    financial: t('financial'),
+    health: t('health'),
+    learning: t('learning')
   }
 
   return (
@@ -47,16 +48,16 @@ const HabitEditForm = ({ id, name, impact, goalId, onSave, onCancel }) => {
         value={newImpact}
         onChange={(e) => setNewImpact(e.target.value)}
       >
-        <option value="positive">Positive</option>
-        <option value="neutral">Neutral</option>
-        <option value="negative">Negative</option>
+        <option value="positive">{t('positive')}</option>
+        <option value="neutral">{t('neutral')}</option>
+        <option value="negative">{t('negative')}</option>
       </select>
 
       <select
         value={newGoalId}
         onChange={(e) => setNewGoalId(e.target.value)}
       >
-        <option value="">-- ei tavoitetta --</option>
+        <option value="">-- {t('noGoal')} --</option>
         {goals.map(goal => (
           <option key={goal.id} value={goal.id}>
             {CATEGORY_LABELS[goal.category]} - {goal.description.substring(0, 50)}
@@ -66,9 +67,9 @@ const HabitEditForm = ({ id, name, impact, goalId, onSave, onCancel }) => {
       </select>
 
       <div className="form-buttons">
-        <button type="submit">Save</button>
+        <button type="submit">{t('save')}</button>
         <button type="button" onClick={onCancel}>
-          Cancel
+          {t('cancel')}
         </button>
       </div>
     </form>

@@ -9,7 +9,7 @@ import (
 type HabitCompletion struct {
 	ID            int64     `json:"id"`
 	HabitID       int64     `json:"habit_id"`
-	UserID        int64     `json:"user_id"`
+	UserID        int64     `json:"-"`
 	CompletedDate time.Time `json:"completed_date"`
 	CreatedAt     time.Time `json:"created_at"`
 }

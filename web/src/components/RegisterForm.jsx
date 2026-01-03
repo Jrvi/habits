@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Logo from "./Logo";
+import { t } from '../i18n/translations.js'
 
 const RegisterForm = ({ handleRegister }) => {
   const [username, setUsername] = useState("");
@@ -11,7 +12,7 @@ const RegisterForm = ({ handleRegister }) => {
     event.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      alert(t('passwordsDoNotMatch'));
       return;
     }
 
@@ -28,11 +29,11 @@ const RegisterForm = ({ handleRegister }) => {
         <Logo />
       </div>
 
-      <h2>Register</h2>
+      <h2>{t('register')}</h2>
 
       <form onSubmit={handleRegisterSubmit}>
         <div className="form-group">
-          <label htmlFor="username">Username</label>
+          <label htmlFor="username">{t('username')}</label>
           <input
             id="username"
             type="text"
@@ -44,7 +45,7 @@ const RegisterForm = ({ handleRegister }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t('email')}</label>
           <input
             id="email"
             type="email"
@@ -56,7 +57,7 @@ const RegisterForm = ({ handleRegister }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t('password')}</label>
           <input
             id="password"
             type="password"
@@ -68,7 +69,7 @@ const RegisterForm = ({ handleRegister }) => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password</label>
+          <label htmlFor="confirmPassword">{t('confirmPassword')}</label>
           <input
             id="confirmPassword"
             type="password"
@@ -79,7 +80,7 @@ const RegisterForm = ({ handleRegister }) => {
           />
         </div>
 
-        <button type="submit">Create Account</button>
+        <button type="submit">{t('createAccount')}</button>
       </form>
     </div>
   );

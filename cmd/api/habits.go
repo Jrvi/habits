@@ -33,6 +33,27 @@ func (api *api) createHabitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := getUserFromContext(r)
+	if user == nil {
+		api.unauthorizedErrorResponse(w, r, errors.New("unauthorized"))
+		return
+	}
+
+	if payload.GoalID != nil {
+		goal, err := api.store.Goals.GetByID(r.Context(), *payload.GoalID)
+		if err != nil {
+			switch {
+			case errors.Is(err, store.ErrNotFound):
+				api.badRequestError(w, r, errors.New("invalid goal"))
+			default:
+				api.internalServerError(w, r, err)
+			}
+			return
+		}
+		if goal.UserID != user.ID {
+			api.forbiddenError(w, r)
+			return
+		}
+	}
 
 	habit := &store.Habit{
 		Name:   payload.Name,
@@ -72,9 +93,15 @@ func (api *api) habitContextMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		user := getUserFromContext(r)
+		if user == nil {
+			api.unauthorizedErrorResponse(w, r, errors.New("unauthorized"))
+			return
+		}
+
 		ctx := r.Context()
 
-		habit, err := api.store.Habits.GetByID(ctx, id)
+		habit, err := api.store.Habits.GetByID(ctx, id, user.ID)
 		if err != nil {
 			switch {
 			case errors.Is(err, store.ErrNotFound):
@@ -91,16 +118,16 @@ func (api *api) habitContextMiddleware(next http.Handler) http.Handler {
 }
 
 func (api *api) deleteHabitHandler(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "habitID")
-	id, err := strconv.ParseInt(idParam, 10, 64)
-	if err != nil {
-		api.internalServerError(w, r, err)
+	habit := getHabitFromCtx(r)
+	user := getUserFromContext(r)
+	if user == nil {
+		api.unauthorizedErrorResponse(w, r, errors.New("unauthorized"))
 		return
 	}
 
 	ctx := r.Context()
 
-	err = api.store.Habits.Delete(ctx, id)
+	err := api.store.Habits.Delete(ctx, habit.ID, user.ID)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrNotFound):
@@ -122,6 +149,11 @@ type UpdateHabitPayload struct {
 
 func (api *api) updateHabitHandler(w http.ResponseWriter, r *http.Request) {
 	habit := getHabitFromCtx(r)
+	user := getUserFromContext(r)
+	if user == nil {
+		api.unauthorizedErrorResponse(w, r, errors.New("unauthorized"))
+		return
+	}
 
 	var payload UpdateHabitPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -144,11 +176,27 @@ func (api *api) updateHabitHandler(w http.ResponseWriter, r *http.Request) {
 
 	if payload.GoalID != nil {
 		habit.GoalID = payload.GoalID
+		if payload.GoalID != nil {
+			goal, err := api.store.Goals.GetByID(r.Context(), *payload.GoalID)
+			if err != nil {
+				switch {
+				case errors.Is(err, store.ErrNotFound):
+					api.badRequestError(w, r, errors.New("invalid goal"))
+				default:
+					api.internalServerError(w, r, err)
+				}
+				return
+			}
+			if goal.UserID != user.ID {
+				api.forbiddenError(w, r)
+				return
+			}
+		}
 	}
 
 	api.logger.Info("Updating habit", "id", habit.ID, "version", habit.Version, "impact", habit.Impact)
 
-	if err := api.store.Habits.Update(r.Context(), habit); err != nil {
+	if err := api.store.Habits.Update(r.Context(), habit, user.ID); err != nil {
 		switch err {
 		case store.ErrNotFound:
 			api.notFoundResponseError(w, r, err)

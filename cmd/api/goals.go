@@ -6,6 +6,7 @@ import (
 	"juhojarvi/habits/internal/store"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -49,6 +50,12 @@ func (api *api) createGoalHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if err := api.store.Goals.Create(ctx, goal); err != nil {
+		// Check for duplicate key constraint violation
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") ||
+			strings.Contains(err.Error(), "goals_user_id_year_category_key") {
+			api.conflictError(w, r, errors.New("you already have a goal for this category in this year"))
+			return
+		}
 		api.internalServerError(w, r, err)
 		return
 	}

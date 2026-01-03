@@ -8,7 +8,7 @@ import (
 
 type Goal struct {
 	ID          int64     `json:"id"`
-	UserID      int64     `json:"user_id"`
+	UserID      int64     `json:"-"`
 	Year        int       `json:"year"`
 	Category    string    `json:"category"`
 	Description string    `json:"description"`

@@ -56,3 +56,9 @@ func (api *api) forbiddenError(w http.ResponseWriter, r *http.Request) {
 
 	writeJSONError(w, http.StatusForbidden, "forbidden")
 }
+
+func (api *api) conflictError(w http.ResponseWriter, r *http.Request, err error) {
+	api.logger.Warnf("conflict", "method", r.Method, "path", r.URL.Path, "error", err)
+
+	writeJSONError(w, http.StatusConflict, err.Error())
+}

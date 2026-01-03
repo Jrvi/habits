@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -32,16 +31,15 @@ func (api *api) AuthTokenMiddleware(next http.Handler) http.Handler {
 		}
 
 		claims, _ := jwtToken.Claims.(jwt.MapClaims)
-
-		userID, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
-		if err != nil {
-			api.unauthorizedErrorResponse(w, r, err)
+		publicID := fmt.Sprintf("%v", claims["sub"])
+		if publicID == "" || publicID == "<nil>" {
+			api.unauthorizedErrorResponse(w, r, fmt.Errorf("missing subject"))
 			return
 		}
 
 		ctx := r.Context()
 
-		user, err := api.store.Users.GetByID(ctx, userID)
+		user, err := api.store.Users.GetByPublicID(ctx, publicID)
 		if err != nil {
 			api.unauthorizedErrorResponse(w, r, err)
 			return

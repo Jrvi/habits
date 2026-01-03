@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"juhojarvi/habits/internal/mailer"
 	"juhojarvi/habits/internal/store"
@@ -132,8 +133,13 @@ func (api *api) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !user.Password.Matches(payload.Password) {
+		api.unauthorizedErrorResponse(w, r, errors.New("invalid credentials"))
+		return
+	}
+
 	claims := jwt.MapClaims{
-		"sub": user.ID,
+		"sub": user.PublicID,
 		"exp": time.Now().Add(api.config.auth.token.exp).Unix(),
 		"iat": time.Now().Unix(),
 		"nbf": time.Now().Unix(),
@@ -148,7 +154,7 @@ func (api *api) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userWithToken := UserWithToken{
-		User: user,
+		User:  user,
 		Token: token,
 	}
 

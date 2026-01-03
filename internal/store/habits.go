@@ -14,13 +14,13 @@ const postCtxKey habitKey = "habit"
 type Habit struct {
 	ID         int64  `json:"id"`
 	Name       string `json:"name"`
-	UserID     int64  `json:"user_id"`
+	UserID     int64  `json:"-"`
 	Impact     string `json:"impact"`
 	GoalID     *int64 `json:"goal_id"`
 	Created_at string `json:"created_at"`
 	Updated_at string `json:"updated_at"`
 	Version    int    `json:"version"`
-	User       User   `json:"user"`
+	User       User   `json:"-"`
 }
 
 type HabitStore struct {
@@ -49,11 +49,11 @@ func (s *HabitStore) Create(ctx context.Context, habit *Habit) error {
 	return nil
 }
 
-func (s *HabitStore) GetByID(ctx context.Context, id int64) (*Habit, error) {
+func (s *HabitStore) GetByID(ctx context.Context, id int64, userID int64) (*Habit, error) {
 	query := `
-    SELECT id, name, impact, goal_id, created_at, updated_at, version
+		SELECT id, name, user_id, impact, goal_id, created_at, updated_at, version
     FROM habits
-    WHERE id = $1
+		WHERE id = $1 AND user_id = $2
   `
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -61,9 +61,10 @@ func (s *HabitStore) GetByID(ctx context.Context, id int64) (*Habit, error) {
 
 	var habit Habit
 
-	err := s.db.QueryRowContext(ctx, query, id).Scan(
+	err := s.db.QueryRowContext(ctx, query, id, userID).Scan(
 		&habit.ID,
 		&habit.Name,
+		&habit.UserID,
 		&habit.Impact,
 		&habit.GoalID,
 		&habit.Created_at,
@@ -128,13 +129,13 @@ func (s *HabitStore) GetUserFeed(ctx context.Context, userID int64, fq Paginated
 	return feed, nil
 }
 
-func (s *HabitStore) Delete(ctx context.Context, postID int64) error {
-	query := `DELETE FROM habits WHERE id = $1`
+func (s *HabitStore) Delete(ctx context.Context, postID int64, userID int64) error {
+	query := `DELETE FROM habits WHERE id = $1 AND user_id = $2`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	res, err := s.db.ExecContext(ctx, query, postID)
+	res, err := s.db.ExecContext(ctx, query, postID, userID)
 	if err != nil {
 		return err
 	}
@@ -151,18 +152,18 @@ func (s *HabitStore) Delete(ctx context.Context, postID int64) error {
 	return nil
 }
 
-func (s *HabitStore) Update(ctx context.Context, habit *Habit) error {
+func (s *HabitStore) Update(ctx context.Context, habit *Habit, userID int64) error {
 	query := `
 		UPDATE habits
 		SET name = $1, impact = $2, goal_id = $3, version = version + 1
-		WHERE id = $4 AND version = $5
+		WHERE id = $4 AND user_id = $5 AND version = $6
 		RETURNING version
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	err := s.db.QueryRowContext(ctx, query, habit.Name, habit.Impact, habit.GoalID, habit.ID, habit.Version).Scan(&habit.Version)
+	err := s.db.QueryRowContext(ctx, query, habit.Name, habit.Impact, habit.GoalID, habit.ID, userID, habit.Version).Scan(&habit.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):

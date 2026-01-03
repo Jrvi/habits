@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import completionsService from '../services/completions'
+import { t } from '../i18n/translations.js'
 
 const WeekTracker = ({ habitId, habitImpact }) => {
   const [completions, setCompletions] = useState([])
@@ -19,10 +20,15 @@ const WeekTracker = ({ habitId, habitImpact }) => {
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today)
       date.setDate(today.getDate() - i)
+
+      // Monday-first index: 0=Mon ... 6=Sun
+      const jsDay = date.getDay() // 0=Sun
+      const dayIndex = jsDay === 0 ? 6 : jsDay - 1
+
       days.push({
         date: date,
         dateStr: formatDate(date),
-        dayName: getDayName(date),
+        dayIndex,
         isToday: i === 0,
       })
     }
@@ -53,9 +59,9 @@ const WeekTracker = ({ habitId, habitImpact }) => {
     return `${year}-${month}-${day}`
   }
 
-  const getDayName = (date) => {
-    const days = ['Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su']
-    return days[date.getDay() === 0 ? 6 : date.getDay() - 1]
+  const getDayLabel = (dayIndex) => {
+    const keys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    return t(keys[dayIndex] || 'monday')
   }
 
   const isCompleted = (dateStr) => {
@@ -74,14 +80,20 @@ const WeekTracker = ({ habitId, habitImpact }) => {
       
       if (completed) {
         await completionsService.unmarkComplete(habitId, day.dateStr)
+        window.dispatchEvent(new CustomEvent('habitisti:completionchange', {
+          detail: { habitId, date: day.dateStr, completed: false }
+        }))
       } else {
-        await completionsService.markComplete(habitId, day.dateStr)
+        const completion = await completionsService.markComplete(habitId, day.dateStr)
+        window.dispatchEvent(new CustomEvent('habitisti:completionchange', {
+          detail: { habitId, date: day.dateStr, completed: true, completion }
+        }))
       }
       
       await fetchCompletions()
     } catch (err) {
       console.error('Error toggling completion:', err)
-      alert('Virhe merkinnän tallentamisessa')
+      alert(t('errorSavingCompletion'))
     } finally {
       setLoading(false)
     }
@@ -119,12 +131,12 @@ const WeekTracker = ({ habitId, habitImpact }) => {
     <div className="week-tracker">
       <div className="tracker-stats">
         <div className="stat">
-          <span className="stat-label">Viikko:</span>
+          <span className="stat-label">{t('week')}:</span>
           <span className="stat-value">{getCompletionRate()}%</span>
         </div>
         <div className="stat">
-          <span className="stat-label">Putki:</span>
-          <span className="stat-value">{currentStreak} pv</span>
+          <span className="stat-label">{t('streak')}:</span>
+          <span className="stat-value">{currentStreak} {t('days')}</span>
         </div>
       </div>
 
@@ -137,9 +149,9 @@ const WeekTracker = ({ habitId, habitImpact }) => {
               className={`day-button ${completed ? 'completed' : ''} ${day.isToday ? 'today' : ''}`}
               onClick={() => handleDayClick(day)}
               disabled={loading}
-              title={`${day.dayName} ${day.date.getDate()}.${day.date.getMonth() + 1}`}
+              title={`${getDayLabel(day.dayIndex)} ${day.date.getDate()}.${day.date.getMonth() + 1}`}
             >
-              <div className="day-name">{day.dayName}</div>
+              <div className="day-name">{getDayLabel(day.dayIndex)}</div>
               <div className="day-number">{day.date.getDate()}</div>
               {completed && <div className="check-mark">✓</div>}
             </button>
